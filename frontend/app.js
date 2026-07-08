@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
-const API_BASE = `${location.origin}/api`;
+const API_BASE = "";
 const cx = (...xs) => xs.filter(Boolean).join(" ");
 
 /* ─── SVG Icons ─── */
@@ -153,8 +153,8 @@ function CrackAnalysisTab({ onRecordSaved }) {
     setLoading(true);
     try {
       const [seg, det] = await Promise.all([
-        fetch(`${API_BASE}/predict-segmentation`, { method: "POST", body: buildFormData() }).then(r => r.json()),
-        fetch(`${API_BASE}/detect-rdd`, { method: "POST", body: buildFormData() }).then(r => r.json())
+        fetch(`${API_BASE}/api/predict-segmentation`, { method: "POST", body: buildFormData() }).then(r => r.json()),
+        fetch(`${API_BASE}/api/detect-rdd`, { method: "POST", body: buildFormData() }).then(r => r.json())
       ]);
       if (seg.error) throw new Error(seg.error);
       setResult({
@@ -290,7 +290,7 @@ function PotholeTab() {
   useEffect(() => { fetchReports(); }, []);
 
   async function fetchReports() {
-    try { const r = await fetch(`${API_BASE}/get-potholes`).then(r => r.json()); setReports(r.data || []); } catch (e) {}
+    try { const r = await fetch(`${API_BASE}/api/get-potholes`).then(r => r.json()); setReports(r.data || []); } catch (e) {}
   }
 
   function getGPS() {
@@ -314,7 +314,7 @@ function PotholeTab() {
     setLoading(true);
     const fd = new FormData(); fd.append("file", file); fd.append("lat", loc.lat); fd.append("lon", loc.lon);
     try {
-      const res = await fetch(`${API_BASE}/report-pothole`, { method: "POST", body: fd }).then(r => r.json());
+      const res = await fetch(`${API_BASE}/api/report-pothole`, { method: "POST", body: fd }).then(r => r.json());
       fetchReports();
       if (res.status === "duplicate") {
         alert(res.message);
@@ -373,8 +373,8 @@ function HistoryTab({ refreshKey }) {
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    fetch(`${API_BASE}/records`).then(r => r.json()).then(d => setRecords(d.items || []));
-    fetch(`${API_BASE}/predictions`).then(r => r.json()).then(d => setPredictions(d.items || []));
+    fetch(`${API_BASE}/api/records`).then(r => r.json()).then(d => setRecords(d.items || []));
+    fetch(`${API_BASE}/api/predictions`).then(r => r.json()).then(d => setPredictions(d.items || []));
   }, [refreshKey]);
 
   async function generatePrediction() {
@@ -383,13 +383,13 @@ function HistoryTab({ refreshKey }) {
     // Use the coordinates of the most recent record
     const { lat, lon } = records[0];
     try {
-        const res = await fetch(`${API_BASE}/predict?lat=${lat}&lon=${lon}&horizon_days=30`).then(r => r.json());
+        const res = await fetch(`${API_BASE}/api/predict?lat=${lat}&lon=${lon}&horizon_days=30`).then(r => r.json());
         if (res.detail) {
             alert("Error: " + res.detail);
         } else {
             alert(`Prediction generated successfully! Projected Risk: ${res.risk}`);
             // Refresh predictions
-            fetch(`${API_BASE}/predictions`).then(r => r.json()).then(d => setPredictions(d.items || []));
+            fetch(`${API_BASE}/api/predictions`).then(r => r.json()).then(d => setPredictions(d.items || []));
         }
     } catch (e) {
         alert("Failed to generate prediction. Server might be asleep.");
@@ -453,7 +453,7 @@ function App() {
   const [historyRefresh, setHistoryRefresh] = useState(0);
 
   useEffect(() => {
-    fetch(`${API_BASE}/health`).then(r => r.json()).then(setHealth).catch(() => {});
+    fetch(`${API_BASE}/api/health`).then(r => r.json()).then(setHealth).catch(() => {});
   }, []);
 
   return (
